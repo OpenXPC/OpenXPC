@@ -14,11 +14,12 @@
  *		All rights reserved.
  */
 
-#include "xpc2/xpc.h"
+#include "launchd.hh"
 
-int main()
+int Job::exec()
 {
-	xpc_connection_create_mach_service("com.apple.launchd", NULL,
-		XPC_CONNECTION_MACH_SERVICE_LISTENER);
-	return 0;
+	int i = fork();
+	if (i < -1)
+		return log_job_errno(job, kError, errno,
+			"Failed to create subprocess: %m");
 }

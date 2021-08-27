@@ -3,5 +3,6 @@
     "files.trimFinalNewlines": true,
     "editor.insertSpaces": false,
     "editor.tabSize": 8,
-    "editor.detectIndentation": true
+    "editor.detectIndentation": true,
+    "cmake.buildDirectory": "/tmp/${workspaceFolderBasename}_build"
 }

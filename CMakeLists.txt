@@ -1,6 +1,17 @@
 cmake_minimum_required(VERSION 3.15)
 project(LaunchD-Reloaded LANGUAGES C CXX OBJC OBJCXX)
 
+set(GATE_NAME "launchd_reloaded")
+set(GATE_VERSION "1-devel")
+set(GATE_STRING "${GATE_NAME}-${GATE_VERSION}")
+
+set(LAUNCHD2_NAME "LaunchdD-Reloaded Bootstrap Service")
+set(LAUNCHD2_VERSION "0.9-devel")
+set(LAUNCHD2_STRING "${LAUNCHD2_NAME} version ${LAUNCHD2_VERSION}")
+
+execute_process(COMMAND date
+	OUTPUT_VARIABLE BUILD_DATE OUTPUT_STRIP_TRAILING_WHITESPACE)
+
 #
 # ObjC setup
 #
@@ -18,7 +29,7 @@ elseif (UNIX)
 	if(NOT DEFINED GNUSTEP_CONFIG)
 		message(FATAL_ERROR "Error: gnustep-config not found. exiting")
 	endif()
-	set(GC_ENV "OBJC_RUNTIME_LIB=ng RUNTIME_VERSION=gnustep")
+	set(GC_ENV "OBJC_RUNTIME_LIB=ng RUNTIME_VERSION=gnustep-2.0")
 
 	execute_process(COMMAND env ${GC_ENV} ${GNUSTEP_CONFIG} --base-libs
 		OUTPUT_VARIABLE OBJC_LIBS OUTPUT_STRIP_TRAILING_WHITESPACE)
@@ -28,9 +39,9 @@ elseif (UNIX)
 		string(REPLACE "-MMD -MP " "" ${VAR} ${${VAR}})
 		string(REPLACE "-g -O2" "" ${VAR} ${${VAR}})
 	endforeach ()
-	set(CMAKE_OBJC_FLAGS "${OBJC_FLAGS}")
-	set(CMAKE_OBJCXX_FLAGS "${OBJC_FLAGS}")
-	set(OBJC_LIBS "${OBJC_LIBS} -lobjc")
+	set(CMAKE_OBJC_FLAGS "${OBJC_FLAGS} -fobjc-runtime=gnustep-2.0")
+	set(CMAKE_OBJCXX_FLAGS "${OBJC_FLAGS} -fobjc-runtime=gnustep-2.0")
+	set(OBJC_LIBS "${OBJC_LIBS} -lobjc -fobjc-runtime=gnustep-2.0")
 	mark_as_advanced(GNUSTEP_CONFIG)
 endif ()
 
@@ -45,3 +56,5 @@ pkg_check_modules(DBUS REQUIRED IMPORTED_TARGET dbus-1)
 add_subdirectory(launchctl2)
 add_subdirectory(launchd2)
 add_subdirectory(libxpc-dbus)
+
+configure_file(libxpc-dbus/xpc2/config.h.in libxpc-dbus/xpc2/config.h)

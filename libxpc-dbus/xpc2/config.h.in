@@ -17,6 +17,12 @@
 #ifndef CONFIG_H_IN_
 #define CONFIG_H_IN_
 
+#define GATE_STRING "@GATE_STRING@"
+#define LAUNCHD2_STRING "@LAUNCHD2_STRING@"
+#define BUILD_DATE "@BUILD_DATE@"
+
+#define LAUNCHCTL_PATH "@LAUNCHCTL_PATH@"
+
 #cmakedefine HAVE_libdispatch
 
 #endif /* CONFIG_H_IN_ */
