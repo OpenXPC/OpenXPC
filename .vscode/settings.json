@@ -1,0 +1,7 @@
+{
+    "files.insertFinalNewline": true,
+    "files.trimFinalNewlines": true,
+    "editor.insertSpaces": false,
+    "editor.tabSize": 8,
+    "editor.detectIndentation": true
+}
