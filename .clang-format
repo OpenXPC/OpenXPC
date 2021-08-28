@@ -29,6 +29,7 @@ AlwaysBreakBeforeMultilineStrings: false
 AlwaysBreakTemplateDeclarations: false
 BinPackArguments: true
 BinPackParameters: true
+BitFieldColonSpacing: After
 BraceWrapping:
   AfterClass: false
   AfterControlStatement: false
@@ -570,12 +571,21 @@ IncludeCategories:
  - Regex: '^<protocols.*/.*'
    Priority: -92
    SortPriority: -91
+ - Regex: '^<.*/.*\.h>'
+   Priority: -50
+   SortPriority: -51
  - Regex: '^<.*\.h>'
    Priority: -50
    SortPriority: -50
+ - Regex: '^<.*/.*>'
+   Priority: -40
+   SortPriority: -40
  - Regex: '^<.*>'
    Priority: -40
    SortPriority: -40
+ - Regex: '^\".*/.*\"'
+   Priority: -20
+   SortPriority: -20
  - Regex: '^\".*\"'
    Priority: 1
    SortPriority: 1

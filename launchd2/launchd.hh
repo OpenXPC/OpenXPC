@@ -18,9 +18,11 @@
 #define LAUNCHD_H_
 
 #include <sys/types.h>
+#include <sys/socket.h>
 
 #include <list>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -33,15 +35,55 @@
 	(log_job(job, level, __VA_ARGS__), -error)
 
 struct Domain;
+class Socket;
+class Job;
 
-struct Job {
-	std::string name;
+/* Any object subscribing to KEvents implements this interface. */
+struct KEventHandler {
+	virtual void event_cb(int ident, int filter, int fflags, int data)
+	{
+		log_error("Unhandled KEvent");
+	}
+};
+
+/* A group of 'equivalent' sockets (e.g. one IPv4, one IPv6).  */
+class SocketGroup : KEventHandler {
+	Job *job;
+
+public:
+	std::list<int> fds;
+
+	/* from plist */
+	std::string label;
+};
+
+class Job : KEventHandler {
+public:
+	Domain *domain = NULL;
+	enum { kOffline, kOnline, kRunning } state = kOffline;
+
 	std::string plist_path;
-	std::vector<std::string> progargs;
-	Domain *domain;
+	bool is_bootstrap: 1; /* passed private IPC channel */
 
-	/* launch the job */
-	int exec();
+	/* plist-derived stuff */
+	std::string label;
+	std::optional<std::string> program = std::nullopt;
+	std::vector<std::string> progargs;
+	std::vector<SocketGroup> sockgroups;
+
+	int exec(); /* launch the job */
+
+private:
+	/**
+	 * Read-end of waitfd - if setup_subproc fails in subproc, it writes
+	 * error here.
+	 */
+	int wait_fd = -1;
+
+	void event_cb(int ident, int filter, int fflags, int data);
+
+	/* setup in newly-created subprocess and run the program specified */
+	int setup_subproc(int waitfd);
 };
 
 struct Domain {
@@ -58,12 +100,19 @@ struct Domain {
 
 	/* Start the plist-loading job. */
 	int bootstrap_sys();
+
+private:
 };
 
-class Manager {
+class Manager : KEventHandler {
+	bool should_exit = false;
 	std::unique_ptr<Domain> dom_sys;
 
+	void event_cb(int ident, int filter, int fflags, int data);
+
 public:
+	int kq;
+
 	int main(int argc, char *argv[]);
 };
 

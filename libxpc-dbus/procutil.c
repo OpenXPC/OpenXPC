@@ -14,12 +14,25 @@
  *		All rights reserved.
  */
 
-#include "launchd.hh"
+#include <stdbool.h>
+#include <unistd.h>
 
-int Job::exec()
+#include "xpc2/procutil.h"
+
+int close_fds_except(int fds[], int nfds)
 {
-	int i = fork();
-	if (i < -1)
-		return log_job_errno(job, kError, errno,
-			"Failed to create subprocess: %m");
+	for (int i = 3; i < 1023; i++) {
+		bool present = false;
+
+		for (int j = 0; j < nfds; j++)
+			if (fds[j] == i) {
+				present = true;
+				break;
+			}
+
+		if (!present)
+			close(i);
+	}
+
+	return 0;
 }

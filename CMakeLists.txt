@@ -12,6 +12,9 @@ set(LAUNCHD2_STRING "${LAUNCHD2_NAME} version ${LAUNCHD2_VERSION}")
 execute_process(COMMAND date
 	OUTPUT_VARIABLE BUILD_DATE OUTPUT_STRIP_TRAILING_WHITESPACE)
 
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 #
 # ObjC setup
 #
@@ -39,10 +42,25 @@ elseif (UNIX)
 		string(REPLACE "-MMD -MP " "" ${VAR} ${${VAR}})
 		string(REPLACE "-g -O2" "" ${VAR} ${${VAR}})
 	endforeach ()
-	set(CMAKE_OBJC_FLAGS "${OBJC_FLAGS} -fobjc-runtime=gnustep-2.0")
-	set(CMAKE_OBJCXX_FLAGS "${OBJC_FLAGS} -fobjc-runtime=gnustep-2.0")
-	set(OBJC_LIBS "${OBJC_LIBS} -lobjc -fobjc-runtime=gnustep-2.0")
+	set(CMAKE_OBJC_FLAGS "${OBJC_FLAGS} -fobjc-runtime=gnustep-2.0 -fblocks")
+	set(CMAKE_OBJCXX_FLAGS "${OBJC_FLAGS} -fobjc-runtime=gnustep-2.0 -fblocks")
+	set(OBJC_LIBS "${OBJC_LIBS} -lobjc -fobjc-runtime=gnustep-2.0 -fblocks")
 	mark_as_advanced(GNUSTEP_CONFIG)
+endif ()
+
+#
+# System compatibility
+#
+
+if (CMAKE_SYSTEM_NAME MATCHES ".*Linux")
+	set(PLATFORM "GNU/Linux")
+	set(PLATFORM_GNULinux TRUE)
+elseif (CMAKE_SYSTEM_NAME MATCHES "FreeBSD")
+	set(PLATFORM "FreeBSD")
+	set(PLATFORM_FreeBSD TRUE)
+	set(PLATFORM_BSD TRUE)
+else ()
+	error("Unsupported Platform ${CMAKE_SYSTEM_NAME}")
 endif ()
 
 #
@@ -52,6 +70,11 @@ endif ()
 find_package(PkgConfig REQUIRED)
 
 pkg_check_modules(DBUS REQUIRED IMPORTED_TARGET dbus-1)
+
+if (CMAKE_SYSTEM_NAME MATCHES ".*Linux")
+	pkg_check_modules(KQUEUE REQUIRED IMPORTED_TARGET libkqueue)
+	set(KQUEUE_LIBS PkgConfig::KQUEUE)
+endif ()
 
 add_subdirectory(launchctl2)
 add_subdirectory(launchd2)
