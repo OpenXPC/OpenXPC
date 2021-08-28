@@ -15,10 +15,13 @@
  */
 
 #include <sys/stat.h>
+#include <sys/un.h>
 
+#include <Foundation/NSJSONSerialization.h>
 #include <dirent.h>
 #include <glob.h>
 #include <limits.h>
+#include <string.h>
 
 #include <Foundation/Foundation.h>
 
@@ -53,6 +56,7 @@ static int validate(NSMutableDictionary<NSString *, id> *dict,
 	[dict enumerateKeysAndObjectsUsingBlock:^(NSString *key, id val,
 		BOOL *stop) {
 		schema_entry_t *entry = NULL;
+		Class cls;
 
 		for (int i = 0;; i++) {
 			if (schema[i].key == NULL)
@@ -61,14 +65,58 @@ static int validate(NSMutableDictionary<NSString *, id> *dict,
 				entry = &schema[i];
 		}
 
-		if (!entry)
-
+		if (!entry) {
 			log_error("Unmatched key %s\n", [key UTF8String]);
+			*stop = YES;
+			return;
+		}
+
+		switch (entry->type) {
+		case kDictionary:
+			cls = [NSDictionary class];
+			break;
+
+		case kArray:
+			cls = [NSArray class];
+			break;
+
+		case kNumber:
+			cls = [NSNumber class];
+			break;
+
+		case kString:
+			cls = [NSString class];
+			break;
+
+		case kBool:
+			cls = [NSNumber class];
+			break;
+
+		default:
+			cls = [NSObject class];
+		}
+
+		if (![val isKindOfClass:cls]) {
+			log_error("Value for key %s has wrong class",
+				[key UTF8String]);
+			r = -EINVAL;
+			*stop = YES;
+			return;
+		}
+
+		if (entry->cb)
+			if ((r = entry->cb([key UTF8String], val, udata1,
+				     udata2)) < 0) {
+				*stop = YES;
+				return;
+			}
+
 	}];
 
 	return r;
 }
 
+/* process ProgramArguments */
 static int cb_progargs(const char *key, id val, void *udata1, void *udata2)
 {
 	NSArray *arr = val;
@@ -86,12 +134,116 @@ static int cb_progargs(const char *key, id val, void *udata1, void *udata2)
 	return r;
 }
 
+/*
+ * process a single Socket dictionary, creating socket and adding to the dict.
+ */
+static int process_socket(id val, NSMutableDictionary<NSString *, id> *plist)
+{
+	NSString *pathname, *typestr;
+	char secsockpath[255] = { '\0' };
+	NSMutableDictionary<NSString *, id> *sock = val;
+	int type = SOCK_STREAM;
+	int fd;
+
+	if (![val isKindOfClass:[NSDictionary class]]) {
+		log_error("Bad socket entry");
+		return -EINVAL;
+	}
+
+	if ((typestr = sock[@"SockType"])) {
+		if ([typestr isEqualToString:@"dgram"])
+			type = SOCK_DGRAM;
+		else if ([typestr isEqualToString:@"seqpacket"])
+			type = SOCK_SEQPACKET;
+		else if ([typestr isEqualToString:@"stream"])
+			type = SOCK_STREAM;
+		else
+			return log_error_errno(EINVAL, "Bad socket type");
+	}
+
+	if ((pathname = sock[@"SecureSocketWithKey"])) {
+		NSMutableDictionary *userenv;
+		char secsockdir[] = "/tmp/launchd2.XXXXXX", *res;
+
+		res = mkdtemp(secsockdir);
+		snprintf(secsockpath, sizeof(secsockpath) - 1, "%s/%s",
+			secsockdir, [pathname UTF8String]);
+
+		log_info("Generated secure socket <%s>", secsockpath);
+
+		userenv = [plist objectForKey:@"UserEnvironmentVariables"];
+		if (!userenv)
+			userenv = plist[@"UserEnvironmentVariables"] =
+				[NSMutableDictionary new];
+
+		/* add the resultant secure socket path to job's env */
+		userenv[pathname] = [NSString stringWithCString:secsockpath];
+	} else
+		pathname = sock[@"SockPathName"];
+
+	if (pathname) {
+		/* unix domain socket */
+		struct sockaddr_un sun;
+
+		sun.sun_family = AF_UNIX;
+		strncpy(sun.sun_path, [pathname UTF8String],
+			sizeof(sun.sun_path));
+
+		if ((fd = socket(AF_UNIX, type, 0)) < 0)
+			return log_error_errno(errno,
+				"Failed to open socket: %m");
+
+		if ((unlink(sun.sun_path) < 0) && errno != ENOENT) {
+			log_error("Failed to remove old socket file: %m");
+			close(fd);
+			return -errno;
+		}
+
+		sock[@"FileDescriptor"] = [[[NSFileHandle alloc]
+			initWithFileDescriptor:fd
+				closeOnDealloc:NO] autorelease];
+	} else {
+		// TODO: non-Unix sockets
+	}
+
+	return 0;
+}
+
+static int cb_sockets(const char *key, id val, void *udata1, void *udata2)
+{
+	NSDictionary<NSString *, id> *dict = val;
+	__block int r = 0;
+
+	[dict enumerateKeysAndObjectsUsingBlock:^(NSString *key, id val,
+		BOOL *stop) {
+		if ([val isKindOfClass:[NSArray class]]) {
+			NSArray *arr = (NSArray *)val;
+
+			[arr enumerateObjectsUsingBlock:^(id obj,
+				NSUInteger idx, BOOL *stop) {
+				if ((r = process_socket(obj, udata1)) <= 0)
+					*stop = YES;
+			}];
+		} else if ([val isKindOfClass:[NSDictionary class]]) {
+			if ((r = process_socket(val, udata1)) <= 0)
+				*stop = YES;
+		}
+	}];
+
+	return r;
+}
+
 /* clang-format off */
 schema_entry_t entries[] = {
 	{ "Label",		kString,	0, 	kRequired },
 	{ "Disabled",		kBool,		},
+	{ "UserName",		kString,	},
+	{ "GroupName",		kString,	},
+	{ "inetdCompatibility",	kDictionary,	},
 	{ "Program",		kString,	},
 	{ "ProgramArguments",	kArray,		cb_progargs	},
+	{ "ServiceIPC",		kBool,		}, /* noop */
+	{ "Sockets",		kDictionary,	cb_sockets	},
 	{ NULL },
 };
 /* clang-format on */
@@ -100,7 +252,7 @@ static void load(const char *path);
 
 static void parsefile(NSMutableDictionary *dict)
 {
-	validate(dict, entries, NULL, NULL);
+	validate(dict, entries, dict, NULL);
 }
 
 static void loadfile(const char *path)
