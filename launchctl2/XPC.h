@@ -14,17 +14,14 @@
  *		All rights reserved.
  */
 
-#ifndef CONFIG_H_IN_
-#define CONFIG_H_IN_
+#ifndef XPC_H_
+#define XPC_H_
 
-#define GATE_STRING "@GATE_STRING@"
-#define LAUNCHD2_STRING "@LAUNCHD2_STRING@"
-#define BUILD_DATE "@BUILD_DATE@"
+#include <Foundation/Foundation.h>
 
-#define LAUNCHCTL_PATH "@LAUNCHCTL_PATH@"
+#include "xpc2/xpc.h"
 
-#cmakedefine HAVE_libdispatch
+@interface NSNumber (XPC)
++ (xpc_object_t)
 
-#cmakedefine HAVE_sys_sbuf_h
-
-#endif /* CONFIG_H_IN_ */
+#endif /* XPC_H_ */

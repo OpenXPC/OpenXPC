@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.15)
 project(LaunchD-Reloaded LANGUAGES C CXX OBJC OBJCXX)
 
+include(CheckIncludeFiles)
+
 set(GATE_NAME "launchd_reloaded")
 set(GATE_VERSION "1-devel")
 set(GATE_STRING "${GATE_NAME}-${GATE_VERSION}")
@@ -63,6 +65,13 @@ else ()
 	error("Unsupported Platform ${CMAKE_SYSTEM_NAME}")
 endif ()
 
+check_include_files("sys/types.h;sys/sbuf.h" HAVE_sys_sbuf_h)
+
+if (NOT HAVE_sys_sbuf_h)
+	add_subdirectory(libsbuf)
+	set(SBUF_LIBS sbuf)
+endif ()
+
 #
 # Dependencies
 #
@@ -74,6 +83,8 @@ pkg_check_modules(DBUS REQUIRED IMPORTED_TARGET dbus-1)
 if (CMAKE_SYSTEM_NAME MATCHES ".*Linux")
 	pkg_check_modules(KQUEUE REQUIRED IMPORTED_TARGET libkqueue)
 	set(KQUEUE_LIBS PkgConfig::KQUEUE)
+	pkg_check_modules(NVP REQUIRED IMPORTED_TARGET nvp)
+	set(NVP_LIBS PkgConfig::NVP)
 endif ()
 
 add_subdirectory(launchctl2)

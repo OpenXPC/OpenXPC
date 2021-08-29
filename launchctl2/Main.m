@@ -17,11 +17,11 @@
 #include <sys/stat.h>
 #include <sys/un.h>
 
-#include <Foundation/NSJSONSerialization.h>
 #include <dirent.h>
 #include <glob.h>
 #include <limits.h>
 #include <string.h>
+#include <unistd.h>
 
 #include <Foundation/Foundation.h>
 

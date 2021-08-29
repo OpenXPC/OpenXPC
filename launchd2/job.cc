@@ -95,7 +95,7 @@ int Job::setup_subproc(int waitfd)
 			argv[i] = progargs[i].c_str();
 	}
 
-	r = execvpe(exe, (char *const *)argv, NULL);
+	r = execve(exe, (char *const *)argv, NULL);
 
 	log_error_errno(errno, "Failed to launch program <%s>: %m", exe);
 	exit(-errno);
