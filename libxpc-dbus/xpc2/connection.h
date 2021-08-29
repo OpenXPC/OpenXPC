@@ -17,9 +17,13 @@
 #ifndef XPC_H_
 #define XPC_H_
 
-#include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
+
+#ifdef HAVE_dispatch
+#include <dispatch/dispatch.h>
+#endif
 
 #define XPC_CONNECTION_MACH_SERVICE_LISTENER (1 << 0)
 
@@ -27,17 +31,8 @@
 typedef void *dispatch_queue_t;
 #endif
 
-typedef struct DBusConnection DBusConnection;
-
-struct xpc_connection {
-	bool listener;
-	DBusConnection *conn;
-	char busname[255];
-};
-
-typedef struct xpc_connection *xpc_connection_t;
-
 xpc_connection_t xpc_connection_create_mach_service(const char *name,
 	dispatch_queue_t targetq, uint64_t flags);
+void xpc_connection_send_message(xpc_connection_t xconn, xpc_object_t xmsg);
 
 #endif /* XPC_H_ */

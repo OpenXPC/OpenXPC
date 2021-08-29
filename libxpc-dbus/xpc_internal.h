@@ -33,6 +33,8 @@
 #include <dispatch/dispatch.h>
 #endif
 
+#include "xpc2/xpc.h"
+
 #include "compat_queue.h"
 
 #ifdef XPC_DEBUG
@@ -45,25 +47,6 @@
 #else
 #define debugf(...)
 #endif
-
-#define _XPC_TYPE_INVALID 0
-#define _XPC_TYPE_DICTIONARY 1
-#define _XPC_TYPE_ARRAY 2
-#define _XPC_TYPE_BOOL 3
-#define _XPC_TYPE_CONNECTION 4
-#define _XPC_TYPE_ENDPOINT 5
-#define _XPC_TYPE_NULL 6
-#define _XPC_TYPE_INT64 8
-#define _XPC_TYPE_UINT64 9
-#define _XPC_TYPE_DATE 10
-#define _XPC_TYPE_DATA 11
-#define _XPC_TYPE_STRING 12
-#define _XPC_TYPE_UUID 13
-#define _XPC_TYPE_FD 14
-#define _XPC_TYPE_SHMEM 15
-#define _XPC_TYPE_ERROR 16
-#define _XPC_TYPE_DOUBLE 17
-#define _XPC_TYPE_MAX _XPC_TYPE_DOUBLE
 
 #define XPC_SEQID "XPC sequence number"
 #define XPC_PROTOCOL_VERSION 1
@@ -98,7 +81,7 @@ typedef union {
 
 #define _XPC_FROM_WIRE 0x1
 struct xpc_object {
-	uint8_t xo_xpc_type;
+	xpc_type_t xo_xpc_type;
 	uint16_t xo_flags;
 	volatile uint32_t xo_refcnt;
 	size_t xo_size;
@@ -124,6 +107,10 @@ struct xpc_resource {
 	};
 };
 
+struct _xpc_type_s {
+	const char *description;
+};
+
 #define xo_str xo_u.str
 #define xo_bool xo_u.b
 #define xo_uint xo_u.ui
@@ -138,9 +125,9 @@ struct xpc_resource {
 
 __private_extern__ struct xpc_transport *xpc_get_transport();
 __private_extern__ void xpc_set_transport(struct xpc_transport *);
-__private_extern__ struct xpc_object *_xpc_prim_create(int type, xpc_u value,
-	size_t size);
-__private_extern__ struct xpc_object *_xpc_prim_create_flags(int type,
+__private_extern__ struct xpc_object *_xpc_prim_create(xpc_type_t type,
+	xpc_u value, size_t size);
+__private_extern__ struct xpc_object *_xpc_prim_create_flags(xpc_type_t type,
 	xpc_u value, size_t size, uint16_t flags);
 __private_extern__ const char *_xpc_get_type_name(xpc_object_t obj);
 __private_extern__ void xpc_object_destroy(struct xpc_object *xo);

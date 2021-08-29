@@ -21,7 +21,28 @@
 
 #include "xpc2/xpc.h"
 
+@interface NSArray (XPC)
+- (xpc_object_t)newXPCObject;
+@end
+
+@interface NSData (XPC)
+- (xpc_object_t)newXPCObject;
+@end
+
+@interface NSDictionary (XPC)
+- (xpc_object_t)newXPCObject;
+@end
+
+@interface NSFileHandle (XPC)
+- (xpc_object_t)newXPCObject;
+@end
+
 @interface NSNumber (XPC)
-+ (xpc_object_t)
+- (xpc_object_t)newXPCObject;
+@end
+
+@interface NSString (XPC)
+- (xpc_object_t)newXPCObject;
+@end
 
 #endif /* XPC_H_ */

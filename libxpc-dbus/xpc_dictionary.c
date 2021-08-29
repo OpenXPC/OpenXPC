@@ -38,7 +38,7 @@ xpc_dictionary_create(const char *const *keys, const xpc_object_t *values,
 	size_t i;
 	xpc_u val;
 
-	xo = _xpc_prim_create(_XPC_TYPE_DICTIONARY, val, count);
+	xo = _xpc_prim_create(XPC_TYPE_DICTIONARY, val, count);
 
 	for (i = 0; i < count; i++)
 		xpc_dictionary_set_value(xo, keys[i], values[i]);
@@ -78,7 +78,7 @@ xpc_dictionary_set_mach_recv(xpc_object_t xdict, const char *key,
 	xpc_u val;
 
 	val.port = port;
-	xotmp = _xpc_prim_create(_XPC_TYPE_ENDPOINT, val, 0);
+	xotmp = _xpc_prim_create(XPC_TYPE_ENDPOINT, val, 0);
 
 	xpc_dictionary_set_value(xdict, key, xotmp);
 }
@@ -91,7 +91,7 @@ xpc_dictionary_set_mach_send(xpc_object_t xdict, const char *key,
 	xpc_u val;
 
 	val.port = port;
-	xotmp = _xpc_prim_create(_XPC_TYPE_ENDPOINT, val, 0);
+	xotmp = _xpc_prim_create(XPC_TYPE_ENDPOINT, val, 0);
 
 	xpc_dictionary_set_value(xdict, key, xotmp);
 }

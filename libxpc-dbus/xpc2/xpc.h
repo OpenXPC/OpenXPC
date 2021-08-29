@@ -87,6 +87,8 @@ extern const struct _xpc_type_s _xpc_type_uuid;
 extern const char *const _xpc_error_key_description;
 extern const char *const _xpc_event_key_name;
 
+#include "connection.h"
+
 xpc_object_t xpc_retain(xpc_object_t object);
 void xpc_release(xpc_object_t object);
 
@@ -142,6 +144,7 @@ const uint8_t *xpc_uuid_get_bytes(xpc_object_t xuuid);
 
 xpc_object_t xpc_fd_create(int fd);
 int xpc_fd_dup(xpc_object_t xfd);
+int xpc_ext_fd_get_fd(xpc_object_t xfd);
 
 xpc_object_t xpc_shmem_create(void *region, size_t length);
 size_t xpc_shmem_map(xpc_object_t xshmem, void **region);

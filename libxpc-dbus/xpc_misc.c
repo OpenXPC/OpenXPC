@@ -76,10 +76,10 @@ xpc_array_destroy(struct xpc_object *dict)
 void
 xpc_object_destroy(struct xpc_object *xo)
 {
-	if (xo->xo_xpc_type == _XPC_TYPE_DICTIONARY)
+	if (xo->xo_xpc_type == XPC_TYPE_DICTIONARY)
 		xpc_dictionary_destroy(xo);
 
-	if (xo->xo_xpc_type == _XPC_TYPE_ARRAY)
+	if (xo->xo_xpc_type == XPC_TYPE_ARRAY)
 		xpc_array_destroy(xo);
 
 	free(xo);
@@ -151,63 +151,48 @@ xpc_copy_description_level(xpc_object_t obj, struct sbuf *sbuf, int level)
 
 	sbuf_printf(sbuf, "(%s) ", _xpc_get_type_name(obj));
 
-	switch (xo->xo_xpc_type) {
-	case _XPC_TYPE_DICTIONARY:
+	if (xo->xo_xpc_type == XPC_TYPE_DICTIONARY) {
 		sbuf_printf(sbuf, "\n");
 		xpc_dictionary_apply(xo, ^(const char *k, xpc_object_t v) {
 			sbuf_printf(sbuf, "%*s\"%s\": ", level * 4, " ", k);
 			xpc_copy_description_level(v, sbuf, level + 1);
 			return ((bool)true);
 		});
-		break;
-
-	case _XPC_TYPE_ARRAY:
+	} else if (xo->xo_xpc_type == XPC_TYPE_ARRAY) {
 		sbuf_printf(sbuf, "\n");
 		xpc_array_apply(xo, ^(size_t idx, xpc_object_t v) {
 			sbuf_printf(sbuf, "%*s%ld: ", level * 4, " ", idx);
 			xpc_copy_description_level(v, sbuf, level + 1);
 			return ((bool)true);
 		});
-		break;
-
-	case _XPC_TYPE_BOOL:
+	} else if (xo->xo_xpc_type == XPC_TYPE_BOOL)
 		sbuf_printf(sbuf, "%s\n",
 			xpc_bool_get_value(obj) ? "true" : "false");
-		break;
-
-	case _XPC_TYPE_STRING:
+	else if (xo->xo_xpc_type == XPC_TYPE_STRING)
 		sbuf_printf(sbuf, "\"%s\"\n", xpc_string_get_string_ptr(obj));
-		break;
-
-	case _XPC_TYPE_INT64:
-		sbuf_printf(sbuf, "%ld\n", xpc_int64_get_value(obj));
-		break;
-
-	case _XPC_TYPE_UINT64:
-		sbuf_printf(sbuf, "%lx\n", xpc_uint64_get_value(obj));
-		break;
-
-	case _XPC_TYPE_DATE:
+	else if (xo->xo_xpc_type == XPC_TYPE_INT64)
+		sbuf_printf(sbuf, "0x%ld\n", xpc_int64_get_value(obj));
+	else if (xo->xo_xpc_type == XPC_TYPE_UINT64)
+		sbuf_printf(sbuf, "0x%lx\n", xpc_uint64_get_value(obj));
+	else if (xo->xo_xpc_type == XPC_TYPE_DATE) {
 		sbuf_printf(sbuf, "%lu\n", xpc_date_get_value(obj));
-		break;
-
 #ifdef HAVE_uuid
-	case _XPC_TYPE_UUID:
-		id = (struct uuid *)xpc_uuid_get_bytes(obj);
-		uuid_to_string(id, &uuid_str, &uuid_status);
+	} else if (xo->xo_xpc_type == XPC_TYPE_UUID) {
+		uuid_t id;
+		uuid_string_t uuid_str;
+		memcpy(id, xpc_uuid_get_bytes(obj), sizeof(uuid_t));
+		uuid_unparse_upper(id, uuid_str);
 		sbuf_printf(sbuf, "%s\n", uuid_str);
 		free(uuid_str);
-		break;
 #endif
-
-	case _XPC_TYPE_ENDPOINT:
+	} else if (xo->xo_xpc_type == XPC_TYPE_ENDPOINT)
 		sbuf_printf(sbuf, "<%ld>\n", xo->xo_int);
-		break;
-
-	case _XPC_TYPE_NULL:
+	else if (xo->xo_xpc_type == XPC_TYPE_NULL)
 		sbuf_printf(sbuf, "<null>\n");
-		break;
-	}
+	else if (xo->xo_xpc_type == XPC_TYPE_FD)
+		sbuf_printf(sbuf, "<%d>\n", xo->xo_fd);
+	else
+		sbuf_printf(sbuf, "<ERROR-TYPE!>\n");
 }
 
 #ifdef MACH
@@ -236,10 +221,10 @@ struct _launch_data {
 	};
 };
 
-static uint8_t ld_to_xpc_type[] = { _XPC_TYPE_INVALID, _XPC_TYPE_DICTIONARY,
-	_XPC_TYPE_ARRAY, _XPC_TYPE_FD, _XPC_TYPE_UINT64, _XPC_TYPE_DOUBLE,
-	_XPC_TYPE_BOOL, _XPC_TYPE_STRING, _XPC_TYPE_DATA, _XPC_TYPE_ERROR,
-	_XPC_TYPE_ENDPOINT };
+static uint8_t ld_to_xpc_type[] = { XPC_TYPE_INVALID, XPC_TYPE_DICTIONARY,
+	XPC_TYPE_ARRAY, XPC_TYPE_FD, XPC_TYPE_UINT64, XPC_TYPE_DOUBLE,
+	XPC_TYPE_BOOL, XPC_TYPE_STRING, XPC_TYPE_DATA, XPC_TYPE_ERROR,
+	XPC_TYPE_ENDPOINT };
 
 xpc_object_t
 ld2xpc(launch_data_t ld)
@@ -277,6 +262,6 @@ xpc_copy_entitlement_for_token(const char *key __unused, audit_token_t *token __
 	xpc_u val;
 
 	val.b = true;
-	return (_xpc_prim_create(_XPC_TYPE_BOOL, val,0));
+	return (_xpc_prim_create(XPC_TYPE_BOOL, val,0));
 }
 #endif

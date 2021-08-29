@@ -26,6 +26,8 @@
 #include <Foundation/Foundation.h>
 
 #include "xpc2/log.h"
+#include "xpc2/xpc.h"
+#include "XPC.h"
 
 typedef struct schema_entry schema_entry_t;
 
@@ -281,6 +283,13 @@ static void loadfile(const char *path)
 			class_getName([plist class]));
 
 	parsefile(plist);
+
+	xpc_object_t res = [plist newXPCObject];
+	log_error("%s\n", xpc_copy_description(res));
+
+	xpc_connection_t conn = xpc_connection_create_mach_service(
+		"org.freedesktop.DBus", NULL, 0);
+	xpc_connection_send_message(conn, res);
 }
 
 static void loaddir(const char *path)

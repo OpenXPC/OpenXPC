@@ -69,7 +69,6 @@ check_include_files("sys/types.h;sys/sbuf.h" HAVE_sys_sbuf_h)
 
 if (NOT HAVE_sys_sbuf_h)
 	add_subdirectory(libsbuf)
-	set(SBUF_LIBS sbuf)
 endif ()
 
 #
