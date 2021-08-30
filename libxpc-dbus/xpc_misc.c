@@ -29,6 +29,7 @@
 #include <sys/errno.h>
 
 #include <assert.h>
+#include <inttypes.h>
 #include <pthread.h>
 #include <syslog.h>
 
@@ -140,9 +141,11 @@ static void
 xpc_copy_description_level(xpc_object_t obj, struct sbuf *sbuf, int level)
 {
 	struct xpc_object *xo = obj;
+#ifdef HAVE_uuid
 	struct uuid *id;
 	char *uuid_str;
 	uint32_t uuid_status;
+#endif
 
 	if (obj == NULL) {
 		sbuf_printf(sbuf, "<null value>\n");
@@ -171,11 +174,11 @@ xpc_copy_description_level(xpc_object_t obj, struct sbuf *sbuf, int level)
 	else if (xo->xo_xpc_type == XPC_TYPE_STRING)
 		sbuf_printf(sbuf, "\"%s\"\n", xpc_string_get_string_ptr(obj));
 	else if (xo->xo_xpc_type == XPC_TYPE_INT64)
-		sbuf_printf(sbuf, "0x%ld\n", xpc_int64_get_value(obj));
+		sbuf_printf(sbuf, "0x%" PRIi64 "\n", xpc_int64_get_value(obj));
 	else if (xo->xo_xpc_type == XPC_TYPE_UINT64)
-		sbuf_printf(sbuf, "0x%lx\n", xpc_uint64_get_value(obj));
+		sbuf_printf(sbuf, "0x%" PRIx64 "\n", xpc_uint64_get_value(obj));
 	else if (xo->xo_xpc_type == XPC_TYPE_DATE) {
-		sbuf_printf(sbuf, "%lu\n", xpc_date_get_value(obj));
+		sbuf_printf(sbuf, "%" PRIu64 "\n", xpc_date_get_value(obj));
 #ifdef HAVE_uuid
 	} else if (xo->xo_xpc_type == XPC_TYPE_UUID) {
 		uuid_t id;
@@ -186,7 +189,7 @@ xpc_copy_description_level(xpc_object_t obj, struct sbuf *sbuf, int level)
 		free(uuid_str);
 #endif
 	} else if (xo->xo_xpc_type == XPC_TYPE_ENDPOINT)
-		sbuf_printf(sbuf, "<%ld>\n", xo->xo_int);
+		sbuf_printf(sbuf, "<%" PRIx64 ">\n", xo->xo_int);
 	else if (xo->xo_xpc_type == XPC_TYPE_NULL)
 		sbuf_printf(sbuf, "<null>\n");
 	else if (xo->xo_xpc_type == XPC_TYPE_FD)

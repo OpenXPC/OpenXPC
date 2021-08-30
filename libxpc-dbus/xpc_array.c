@@ -26,7 +26,7 @@
  */
 
 #include <sys/types.h>
-#include <xpc2/xpc.h>
+#include "xpc2/xpc.h"
 #include "xpc_internal.h"
 
 xpc_object_t
@@ -36,6 +36,7 @@ xpc_array_create(const xpc_object_t *objects, size_t count)
 	size_t i;
 	xpc_u val;
 
+	val.ui = 0;
 	xo = _xpc_prim_create(XPC_TYPE_ARRAY, val, 0);
 
 	for (i = 0; i < count; i++)

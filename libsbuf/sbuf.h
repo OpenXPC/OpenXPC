@@ -34,6 +34,28 @@
 #include <stdarg.h>
 #include <unistd.h>
 
+/*
+ * We rename our bundled libsbuf's functions to avoid a conflict with macOS'
+ * sbuf.h, which is included unconditionally as part of the Darwin module.
+ */
+#define sbuf sbuf2
+#define sbuf_new sbuf2_new
+#define sbuf_setpos sbuf2_setpos
+#define sbuf_bcat sbuf2_bcat
+#define sbuf_bcpy sbuf2_bcpy
+#define sbuf_cat sbuf2_cat
+#define sbuf_cpy sbuf2_cpy
+#define sbuf_printf sbuf2_printf
+#define sbuf_vprintf sbuf2_vprintf
+#define sbuf_putc sbuf2_putc
+#define sbuf_clear sbuf2_clear
+#define sbuf_trim sbuf2_trim
+#define sbuf_finish sbuf2_finish
+#define sbuf_len sbuf2_len
+#define sbuf_done sbuf2_done
+#define sbuf_delete sbuf2_delete
+#define sbuf_data sbuf2_data
+
 #ifndef __printflike
 #define __printflike(x, y) __attribute__((format(printf, x, y)))
 #endif

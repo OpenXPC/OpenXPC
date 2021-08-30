@@ -30,6 +30,7 @@
 - (xpc_object_t)newXPCObject
 {
 	xpc_object_t xpc = xpc_dictionary_create(NULL, NULL, 0);
+
 	[self enumerateKeysAndObjectsUsingBlock:^(id<NSCopying> key, id value,
 		BOOL *stop) {
 		if ([value respondsToSelector:@selector(newXPCObject)]) {
@@ -41,6 +42,7 @@
 			NSLog(@"Failed to encode %@", value);
 		}
 	}];
+
 	return xpc;
 }
 

@@ -109,6 +109,7 @@ xpc_object_t
 xpc_null_create(void)
 {
 	xpc_u val;
+	val.ui = 0;
 	return _xpc_prim_create(XPC_TYPE_NULL, val, 0);
 }
 
@@ -364,12 +365,12 @@ xpc_ext_fd_get_fd(xpc_object_t xfd)
 
 	xo = xfd;
 	if (xo == NULL)
-		return (NULL);
+		return (-1);
 
 	if (xo->xo_xpc_type == XPC_TYPE_FD)
 		return (xo->xo_fd);
 
-	return (NULL);
+	return (-1);
 }
 
 #ifdef HAVE_uuid

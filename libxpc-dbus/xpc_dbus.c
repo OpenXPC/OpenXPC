@@ -1,3 +1,5 @@
+#include <stddef.h>
+
 #include <dbus/dbus-protocol.h>
 #include <dbus/dbus.h>
 

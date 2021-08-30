@@ -22,12 +22,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 #
 
 set(CMAKE_OBJC_FLAGS "${CMAKE_OBJC_FLAGS} -fexceptions -fobjc-exceptions \
-	-Xclang -fobjc-runtime=gnustep -Xclang -fblocks \
-	-Wno-nullability-completeness")
+	-fblocks -Xclang -fblocks -Wno-nullability-completeness")
 set(CMAKE_OBJCXX_FLAGS "${CMAKE_OBJCXX_FLAGS} ${CMAKE_OBJC_FLAGS}")
 
 if (APPLE)
-	set(OBJC_LIBRARIES "-framework Foundation")
+	set(OBJC_LIBS "-framework Foundation")
 	set(OBJC_FLAGS "")
 elseif (UNIX)
 	find_program(GNUSTEP_CONFIG gnustep-config)
@@ -44,9 +43,9 @@ elseif (UNIX)
 		string(REPLACE "-MMD -MP " "" ${VAR} ${${VAR}})
 		string(REPLACE "-g -O2" "" ${VAR} ${${VAR}})
 	endforeach ()
-	set(CMAKE_OBJC_FLAGS "${OBJC_FLAGS} -fobjc-runtime=gnustep-2.0 -fblocks")
-	set(CMAKE_OBJCXX_FLAGS "${OBJC_FLAGS} -fobjc-runtime=gnustep-2.0 -fblocks")
-	set(OBJC_LIBS "${OBJC_LIBS} -lobjc -fobjc-runtime=gnustep-2.0 -fblocks")
+	set(CMAKE_OBJC_FLAGS "${CMAKE_OBJC_FLAGS} -fobjc-runtime=gnustep-2.0")
+	set(CMAKE_OBJCXX_FLAGS "${CMAKE_OBJC_FLAGS} -fobjc-runtime=gnustep-2.0")
+	set(OBJC_LIBS "${OBJC_LIBS} -lobjc -fobjc-runtime=gnustep-2.0")
 	mark_as_advanced(GNUSTEP_CONFIG)
 endif ()
 
@@ -61,11 +60,17 @@ elseif (CMAKE_SYSTEM_NAME MATCHES "FreeBSD")
 	set(PLATFORM "FreeBSD")
 	set(PLATFORM_FreeBSD TRUE)
 	set(PLATFORM_BSD TRUE)
+	set(HAVE_sys_sbuf_h TRUE)
+elseif (APPLE)
+	set(PLATFORM "MacOSX")
+	set(PLATFORM_MacOSX TRUE)
+	set(PLATFORM_BSD TRUE)
 else ()
 	error("Unsupported Platform ${CMAKE_SYSTEM_NAME}")
 endif ()
 
-check_include_files("sys/types.h;sys/sbuf.h" HAVE_sys_sbuf_h)
+#check_include_files("sys/types.h;sys/sbuf.h" HAVE_sys_sbuf_h) # hassle on macOS
+check_include_files("dispatch/dispatch.h" HAVE_dispatch)
 
 if (NOT HAVE_sys_sbuf_h)
 	add_subdirectory(libsbuf)

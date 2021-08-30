@@ -23,8 +23,7 @@
 
 #define LAUNCHCTL_PATH "@LAUNCHCTL_PATH@"
 
-#cmakedefine HAVE_libdispatch
-
+#cmakedefine HAVE_dispatch
 #cmakedefine HAVE_sys_sbuf_h
 
 #endif /* CONFIG_H_IN_ */

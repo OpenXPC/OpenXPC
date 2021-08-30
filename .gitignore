@@ -35,3 +35,8 @@
 build
 /compile_commands.json
 
+xcuserdata/
+.DS_Store
+._*
+.osync*
+*.sb-*

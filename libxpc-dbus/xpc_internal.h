@@ -123,7 +123,7 @@ struct _xpc_type_s {
 #define xo_array xo_u.array
 #define xo_dict xo_u.dict
 
-__private_extern__ struct xpc_transport *xpc_get_transport();
+__private_extern__ struct xpc_transport *xpc_get_transport(void);
 __private_extern__ void xpc_set_transport(struct xpc_transport *);
 __private_extern__ struct xpc_object *_xpc_prim_create(xpc_type_t type,
 	xpc_u value, size_t size);

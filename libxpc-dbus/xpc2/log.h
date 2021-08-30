@@ -28,7 +28,7 @@ extern "C" {
 
 enum log_level { kDebug, kInfo, kNotice, kWarn, kError, kMax };
 
-int log_oom();
+int log_oom(void);
 
 int ldr_log(int level, const char *file, int line, const char *func,
 	const char *format, ...) PRINTFLIKE(5, 6);

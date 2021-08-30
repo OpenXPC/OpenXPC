@@ -46,7 +46,7 @@ static int expand_percentm(int errno_num, const char *fmtin, char *fmtout)
 static int log_output(int level, const char *file, int line, const char *func,
 	const char *object_name, const char *object, char *buffer)
 {
-	if (0)
+	if ((0))
 		printf("(%s:%u) ", file, line);
 
 	if (level == kError)

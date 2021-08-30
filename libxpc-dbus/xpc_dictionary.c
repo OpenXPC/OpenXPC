@@ -38,6 +38,7 @@ xpc_dictionary_create(const char *const *keys, const xpc_object_t *values,
 	size_t i;
 	xpc_u val;
 
+	val.ui = 0;
 	xo = _xpc_prim_create(XPC_TYPE_DICTIONARY, val, count);
 
 	for (i = 0; i < count; i++)
@@ -241,7 +242,7 @@ xpc_dictionary_get_string(xpc_object_t xdict, const char *key)
 bool
 xpc_dictionary_apply(xpc_object_t xdict, xpc_dictionary_applier_t applier)
 {
-	struct xpc_object *xo, *xotmp;
+	struct xpc_object *xo;
 	struct xpc_dict_head *head;
 	struct xpc_dict_pair *pair;
 
@@ -261,7 +262,7 @@ bool
 xpc_dictionary_apply_fun(xpc_object_t xdict,
 	xpc_dictionary_applier_fun_t applier, void *udata)
 {
-	struct xpc_object *xo, *xotmp;
+	struct xpc_object *xo;
 	struct xpc_dict_head *head;
 	struct xpc_dict_pair *pair;
 
