@@ -2,7 +2,7 @@
  *		PROPRIETARY NOTICE
  *
  *  This source code is unpublished proprietary information
- *  constituting, or derived under license from LaunchD-Reloaded(tm).
+ *  constituting, or derived under license from OpenXPC(tm).
  *
  *
  *		Copyright Notice
@@ -10,7 +10,7 @@
  *  Notice of copyright on this source code product does not indicate
  *  publication.
  *
- *	(c) 2021 The Project Maintainers of LaunchD-Reloaded.
+ *	(c) 2021 The Project Maintainers of OpenXPC.
  *		All rights reserved.
  */
 
@@ -26,7 +26,7 @@
 #include <string>
 #include <vector>
 
-#include "xpc2/log.h"
+#include "OpenXPC/log.h"
 
 #define log_job(job, level, ...)                                               \
 	ldr_log(level, __FILE__, __LINE__, __func__, __VA_ARGS__)
@@ -40,7 +40,8 @@ class Job;
 
 /* Any object subscribing to KEvents implements this interface. */
 struct KEventHandler {
-	virtual void event_cb(int ident, int filter, int fflags, int data)
+	virtual void
+	event_cb(int ident, int filter, int fflags, int data)
 	{
 		log_error("Unhandled KEvent");
 	}

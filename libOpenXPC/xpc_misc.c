@@ -33,7 +33,7 @@
 #include <pthread.h>
 #include <syslog.h>
 
-#include "xpc2/xpc.h"
+#include "OpenXPC/xpc.h"
 #include "compat_sbuf.h"
 #include "xpc_internal.h"
 

@@ -2,7 +2,7 @@
  *		PROPRIETARY NOTICE
  *
  *  This source code is unpublished proprietary information
- *  constituting, or derived under license from LaunchD-Reloaded(tm).
+ *  constituting, or derived under license from OpenXPC(tm).
  *
  *
  *		Copyright Notice
@@ -10,16 +10,17 @@
  *  Notice of copyright on this source code product does not indicate
  *  publication.
  *
- *	(c) 2021 The Project Maintainers of LaunchD-Reloaded.
+ *	(c) 2021 The Project Maintainers of OpenXPC.
  *		All rights reserved.
  */
 
 #include <stdbool.h>
 #include <unistd.h>
 
-#include "xpc2/procutil.h"
+#include "OpenXPC/procutil.h"
 
-int close_fds_except(int fds[], int nfds)
+int
+close_fds_except(int fds[], int nfds)
 {
 	for (int i = 3; i < 1023; i++) {
 		bool present = false;

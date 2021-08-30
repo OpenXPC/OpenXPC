@@ -33,7 +33,7 @@
 #include <dispatch/dispatch.h>
 #endif
 
-#include "xpc2/xpc.h"
+#include "OpenXPC/xpc.h"
 
 #include "compat_queue.h"
 

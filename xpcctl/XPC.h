@@ -2,7 +2,7 @@
  *		PROPRIETARY NOTICE
  *
  *  This source code is unpublished proprietary information
- *  constituting, or derived under license from LaunchD-Reloaded(tm).
+ *  constituting, or derived under license from OpenXPC(tm).
  *
  *
  *		Copyright Notice
@@ -10,7 +10,7 @@
  *  Notice of copyright on this source code product does not indicate
  *  publication.
  *
- *	(c) 2021 The Project Maintainers of LaunchD-Reloaded.
+ *	(c) 2021 The Project Maintainers of OpenXPC.
  *		All rights reserved.
  */
 
@@ -19,7 +19,7 @@
 
 #include <Foundation/Foundation.h>
 
-#include "xpc2/xpc.h"
+#include "OpenXPC/xpc.h"
 
 @interface NSArray (XPC)
 - (xpc_object_t)newXPCObject;

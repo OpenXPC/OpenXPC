@@ -32,7 +32,7 @@
 #include <stdio.h>
 #include <time.h>
 
-#include "xpc2/xpc.h"
+#include "OpenXPC/xpc.h"
 #include "xpc_internal.h"
 
 typedef const struct _xpc_type_s xt;

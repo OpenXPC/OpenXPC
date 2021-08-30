@@ -2,7 +2,7 @@
  *		PROPRIETARY NOTICE
  *
  *  This source code is unpublished proprietary information
- *  constituting, or derived under license from LaunchD-Reloaded(tm).
+ *  constituting, or derived under license from OpenXPC(tm).
  *
  *
  *		Copyright Notice
@@ -10,7 +10,7 @@
  *  Notice of copyright on this source code product does not indicate
  *  publication.
  *
- *	(c) 2021 The Project Maintainers of LaunchD-Reloaded.
+ *	(c) 2021 The Project Maintainers of OpenXPC.
  *		All rights reserved.
  */
 
@@ -20,16 +20,18 @@
 #include <unistd.h>
 #include <cassert>
 
-#include "xpc2/procutil.h"
-#include "xpc2/util.h"
+#include "OpenXPC/procutil.h"
+#include "OpenXPC/util.h"
 #include "launchd.hh"
 
-void Job::event_cb(int ident, int filter, int fflags, int data)
+void
+Job::event_cb(int ident, int filter, int fflags, int data)
 {
 	log_error("Got event %d/%d\n", ident, filter);
 }
 
-int Job::exec()
+int
+Job::exec()
 {
 	int i;
 	int waitfd[2];
@@ -67,7 +69,8 @@ int Job::exec()
 	return 0;
 }
 
-int Job::setup_subproc(int waitfd)
+int
+Job::setup_subproc(int waitfd)
 {
 	int r;
 	int fd = -1;
