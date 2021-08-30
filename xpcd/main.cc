@@ -2,7 +2,7 @@
  *		PROPRIETARY NOTICE
  *
  *  This source code is unpublished proprietary information
- *  constituting, or derived under license from LaunchD-Reloaded(tm).
+ *  constituting, or derived under license from OpenXPC(tm).
  *
  *
  *		Copyright Notice
@@ -10,7 +10,7 @@
  *  Notice of copyright on this source code product does not indicate
  *  publication.
  *
- *	(c) 2021 The Project Maintainers of LaunchD-Reloaded.
+ *	(c) 2021 The Project Maintainers of OpenXPC.
  *		All rights reserved.
  */
 
@@ -19,15 +19,16 @@
 
 #include <cassert>
 
-#include "xpc2/config.h"
-#include "xpc2/log.h"
+#include "OpenXPC/config.h"
+#include "OpenXPC/log.h"
 
 #include "launchd.hh"
 
 Manager manager;
 
 /* let kqueue handle a signal */
-static int kqueue_signal(int kq, int signo)
+static int
+kqueue_signal(int kq, int signo)
 {
 	struct kevent kev;
 
@@ -48,7 +49,8 @@ static int kqueue_signal(int kq, int signo)
 	return 0;
 }
 
-int Domain::bootstrap_sys()
+int
+Domain::bootstrap_sys()
 {
 	Job *bsjob;
 
@@ -63,7 +65,8 @@ int Domain::bootstrap_sys()
 	return 0;
 }
 
-void Manager::event_cb(int ident, int filter, int fflags, int data)
+void
+Manager::event_cb(int ident, int filter, int fflags, int data)
 {
 	if (filter == EVFILT_SIGNAL) {
 		log_info("Received signal %d", ident);
@@ -72,12 +75,13 @@ void Manager::event_cb(int ident, int filter, int fflags, int data)
 	}
 }
 
-int Manager::main(int argc, char *argv[])
+int
+Manager::main(int argc, char *argv[])
 {
 	struct kevent kev[5];
 	int nev;
 
-	log_info(LAUNCHD2_STRING);
+	log_info(LAUNCHD2_STRING ": " FULL_GATE_STRING);
 
 	if ((kq = kqueue()) == -1)
 		return -log_error_errno(errno,
@@ -116,7 +120,8 @@ int Manager::main(int argc, char *argv[])
 	return 0;
 }
 
-int main(int argc, char *argv[])
+int
+main(int argc, char *argv[])
 {
 	return manager.main(argc, argv);
 }

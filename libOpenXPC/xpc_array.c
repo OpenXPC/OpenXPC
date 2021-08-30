@@ -26,7 +26,7 @@
  */
 
 #include <sys/types.h>
-#include "xpc2/xpc.h"
+#include "OpenXPC/xpc.h"
 #include "xpc_internal.h"
 
 xpc_object_t

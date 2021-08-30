@@ -3,8 +3,8 @@
 #include <dbus/dbus-protocol.h>
 #include <dbus/dbus.h>
 
-#include "xpc2/log.h"
-#include "xpc2/xpc.h"
+#include "OpenXPC/log.h"
+#include "OpenXPC/xpc.h"
 #include "xpc_internal.h"
 
 struct _xpc_connection_s {

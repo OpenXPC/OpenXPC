@@ -2,7 +2,7 @@
  *		PROPRIETARY NOTICE
  *
  *  This source code is unpublished proprietary information
- *  constituting, or derived under license from LaunchD-Reloaded(tm).
+ *  constituting, or derived under license from OpenXPC(tm).
  *
  *
  *		Copyright Notice
@@ -10,7 +10,7 @@
  *  Notice of copyright on this source code product does not indicate
  *  publication.
  *
- *	(c) 2021 The Project Maintainers of LaunchD-Reloaded.
+ *	(c) 2021 The Project Maintainers of OpenXPC.
  *		All rights reserved.
  */
 
@@ -21,7 +21,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "xpc2/config.h"
+#include "OpenXPC/config.h"
 
 #ifdef HAVE_dispatch
 #include <dispatch/dispatch.h>

@@ -2,7 +2,7 @@
  *		PROPRIETARY NOTICE
  *
  *  This source code is unpublished proprietary information
- *  constituting, or derived under license from LaunchD-Reloaded(tm).
+ *  constituting, or derived under license from OpenXPC(tm).
  *
  *
  *		Copyright Notice
@@ -10,7 +10,7 @@
  *  Notice of copyright on this source code product does not indicate
  *  publication.
  *
- *	(c) 2021 The Project Maintainers of LaunchD-Reloaded.
+ *	(c) 2021 The Project Maintainers of OpenXPC.
  *		All rights reserved.
  */
 
@@ -26,8 +26,8 @@
 
 #include <Foundation/Foundation.h>
 
-#include "xpc2/log.h"
-#include "xpc2/xpc.h"
+#include "OpenXPC/log.h"
+#include "OpenXPC/xpc.h"
 #include "XPC.h"
 
 typedef struct schema_entry schema_entry_t;
@@ -51,8 +51,9 @@ struct schema_entry {
 	} need;
 };
 
-static int validate(NSMutableDictionary<NSString *, id> *dict,
-	schema_entry_t schema[], void *udata1, void *udata2)
+static int
+validate(NSMutableDictionary<NSString *, id> *dict, schema_entry_t schema[],
+	void *udata1, void *udata2)
 {
 	__block int r = 0;
 
@@ -113,14 +114,14 @@ static int validate(NSMutableDictionary<NSString *, id> *dict,
 				*stop = YES;
 				return;
 			}
-
 	}];
 
 	return r;
 }
 
 /* process ProgramArguments */
-static int cb_progargs(const char *key, id val, void *udata1, void *udata2)
+static int
+cb_progargs(const char *key, id val, void *udata1, void *udata2)
 {
 	NSArray *arr = val;
 	__block int r = 0;
@@ -140,7 +141,8 @@ static int cb_progargs(const char *key, id val, void *udata1, void *udata2)
 /*
  * process a single Socket dictionary, creating socket and adding to the dict.
  */
-static int process_socket(id val, NSMutableDictionary<NSString *, id> *plist)
+static int
+process_socket(id val, NSMutableDictionary<NSString *, id> *plist)
 {
 	NSString *pathname, *typestr;
 	char secsockpath[255] = { '\0' };
@@ -166,7 +168,7 @@ static int process_socket(id val, NSMutableDictionary<NSString *, id> *plist)
 
 	if ((pathname = sock[@"SecureSocketWithKey"])) {
 		NSMutableDictionary *userenv;
-		char secsockdir[] = "/tmp/launchd2.XXXXXX", *res;
+		char secsockdir[] = "/tmp/xpcd.XXXXXX", *res;
 
 		res = mkdtemp(secsockdir);
 		snprintf(secsockpath, sizeof(secsockpath) - 1, "%s/%s",
@@ -212,7 +214,8 @@ static int process_socket(id val, NSMutableDictionary<NSString *, id> *plist)
 	return 0;
 }
 
-static int cb_sockets(const char *key, id val, void *udata1, void *udata2)
+static int
+cb_sockets(const char *key, id val, void *udata1, void *udata2)
 {
 	NSDictionary<NSString *, id> *dict = val;
 	__block int r = 0;
@@ -253,12 +256,14 @@ schema_entry_t entries[] = {
 
 static void load(const char *path);
 
-static void parsefile(NSMutableDictionary *dict)
+static void
+parsefile(NSMutableDictionary *dict)
 {
 	validate(dict, entries, dict, NULL);
 }
 
-static void loadfile(const char *path)
+static void
+loadfile(const char *path)
 {
 	NSError *error = nil;
 	NSData *data = [NSData
@@ -293,7 +298,8 @@ static void loadfile(const char *path)
 	xpc_connection_send_message(conn, res);
 }
 
-static void loaddir(const char *path)
+static void
+loaddir(const char *path)
 {
 	struct dirent *de;
 	DIR *d;
@@ -315,7 +321,8 @@ static void loaddir(const char *path)
 	closedir(d);
 }
 
-static void load(const char *path)
+static void
+load(const char *path)
 {
 	struct stat st;
 	if (stat(path, &st) == -1)
@@ -328,7 +335,8 @@ static void load(const char *path)
 		loaddir(path);
 }
 
-int main(int argc, char *argv[])
+int
+main(int argc, char *argv[])
 {
 	for (int i = 1; i < argc; i++) {
 		load(argv[i]);

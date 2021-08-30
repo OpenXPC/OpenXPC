@@ -1,15 +1,15 @@
 cmake_minimum_required(VERSION 3.15)
-project(LaunchD-Reloaded LANGUAGES C CXX OBJC OBJCXX)
+project(Libopenxpc LANGUAGES C CXX OBJC OBJCXX)
 
 include(CheckIncludeFiles)
 
-set(GATE_NAME "launchd_reloaded")
-set(GATE_VERSION "1-devel")
-set(GATE_STRING "${GATE_NAME}-${GATE_VERSION}")
+# gate version increases by one for every week
+set(GATE_VERSION "1")
+set(GATE_STRING "${PROJECT_NAME}-${GATE_VERSION}")
 
-set(LAUNCHD2_NAME "LaunchdD-Reloaded Bootstrap Service")
-set(LAUNCHD2_VERSION "0.9-devel")
-set(LAUNCHD2_STRING "${LAUNCHD2_NAME} version ${LAUNCHD2_VERSION}")
+set(LAUNCHD2_NAME "OpenXPC Bootstrap Service")
+set(LAUNCHD2_VERSION "0.9.0-pre")
+set(LAUNCHD2_STRING "${LAUNCHD2_NAME} Version ${LAUNCHD2_VERSION}")
 
 execute_process(COMMAND date
 	OUTPUT_VARIABLE BUILD_DATE OUTPUT_STRIP_TRAILING_WHITESPACE)
@@ -91,8 +91,8 @@ if (CMAKE_SYSTEM_NAME MATCHES ".*Linux")
 	set(NVP_LIBS PkgConfig::NVP)
 endif ()
 
-add_subdirectory(launchctl2)
-add_subdirectory(launchd2)
-add_subdirectory(libxpc-dbus)
+add_subdirectory(libOpenXPC)
+add_subdirectory(xpcctl)
+add_subdirectory(xpcd)
 
-configure_file(libxpc-dbus/xpc2/config.h.in libxpc-dbus/xpc2/config.h)
+configure_file(libOpenXPC/OpenXPC/config.h.in libOpenXPC/OpenXPC/config.h)
