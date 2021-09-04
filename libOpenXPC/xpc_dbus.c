@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <stddef.h>
 
 #include <dbus/dbus-protocol.h>
@@ -29,9 +30,9 @@ xpc_dbus_type(struct xpc_object *xo)
 		type == XPC_TYPE_UINT64	    ? DBUS_TYPE_UINT64_AS_STRING :
 		type == XPC_TYPE_DATE	    ? DBUS_TYPE_INT64_AS_STRING :
 		type == XPC_TYPE_STRING	    ? DBUS_TYPE_STRING_AS_STRING :
-		type == XPC_TYPE_DATA	    ? "BAD" :
+		type == XPC_TYPE_DATA	    ? "ay" :
 		type == XPC_TYPE_DICTIONARY ? "a{sv}" :
-		type == XPC_TYPE_ARRAY	    ? "s" :
+		type == XPC_TYPE_ARRAY	    ? "av" :
 		type == XPC_TYPE_FD	    ? DBUS_TYPE_UNIX_FD_AS_STRING :
 						    DBUS_TYPE_BOOLEAN_AS_STRING;
 }
@@ -54,9 +55,10 @@ append_xpc(struct xpc_object *xo, DBusMessageIter *iter)
 	} else if (xo->xo_xpc_type == XPC_TYPE_STRING) {
 		const char *val = xpc_string_get_string_ptr(xo);
 		dbus_message_iter_append_basic(iter, DBUS_TYPE_STRING, &val);
-	} else if (xo->xo_xpc_type == XPC_TYPE_DATA) {
-		log_error("Fixme"); // FIXME: implement data as array?
-	} else if (xo->xo_xpc_type == XPC_TYPE_FD) {
+	} else if (xo->xo_xpc_type == XPC_TYPE_DATA)
+		dbus_message_iter_append_fixed_array(iter, DBUS_TYPE_BYTE,
+			xpc_data_get_bytes_ptr(xo), xpc_data_get_length(xo));
+	else if (xo->xo_xpc_type == XPC_TYPE_FD) {
 		int fd = xpc_ext_fd_get_fd(xo);
 		dbus_message_iter_append_basic(iter, DBUS_TYPE_UNIX_FD, &fd);
 	} else if (xo->xo_xpc_type == XPC_TYPE_DICTIONARY) {
@@ -69,6 +71,7 @@ append_xpc(struct xpc_object *xo, DBusMessageIter *iter)
 		succ = xpc_dictionary_apply(xo,
 			^bool(const char *key, xpc_object_t value) {
 				DBusMessageIter sub2, sub3;
+
 				dbus_message_iter_open_container(&sub,
 					DBUS_TYPE_DICT_ENTRY, NULL, &sub2);
 				dbus_message_iter_append_basic(&sub2,
@@ -88,8 +91,28 @@ append_xpc(struct xpc_object *xo, DBusMessageIter *iter)
 		if (!succ || !dbus_message_iter_close_container(iter, &sub))
 			goto oom;
 	} else if (xo->xo_xpc_type == XPC_TYPE_ARRAY) {
-		const char *arr = "hello";
-		dbus_message_iter_append_basic(iter, DBUS_TYPE_STRING, &arr);
+		__block DBusMessageIter sub;
+		bool succ;
+
+		dbus_message_iter_open_container(iter, DBUS_TYPE_ARRAY,
+			DBUS_TYPE_VARIANT_AS_STRING, &sub);
+
+		succ = xpc_array_apply(xo,
+			^bool(size_t idx, xpc_object_t value) {
+				DBusMessageIter sub2, sub3;
+
+				dbus_message_iter_open_container(&sub,
+					DBUS_TYPE_VARIANT, xpc_dbus_type(value),
+					&sub2);
+				append_xpc(value, &sub2);
+				if (!dbus_message_iter_close_container(&sub,
+					    &sub2))
+					return false;
+				return true;
+			});
+
+		if (!succ || !dbus_message_iter_close_container(iter, &sub))
+			goto oom;
 	} else {
 		dbus_bool_t val = false;
 		dbus_message_iter_append_basic(iter, DBUS_TYPE_BOOLEAN, &val);
@@ -170,6 +193,8 @@ xpc_connection_create_mach_service(const char *name, dispatch_queue_t targetq,
 	return res;
 }
 
+static xpc_object_t deserialise_message(DBusMessage *msg);
+
 void
 xpc_connection_send_message(xpc_connection_t xconn, xpc_object_t xmsg)
 {
@@ -199,5 +224,136 @@ xpc_connection_send_message(xpc_connection_t xconn, xpc_object_t xmsg)
 		log_error("Failed to send message to the D-Bus: %s\n",
 			error.message);
 
+	deserialise_message(msg);
+
 	dbus_error_free(&error);
+}
+
+static xpc_object_t deserialise_object(DBusMessageIter *iter);
+
+static xpc_object_t
+deserialise_arr(DBusMessageIter *iter)
+{
+	xpc_object_t arr = xpc_array_create(NULL, 0);
+
+	while (dbus_message_iter_get_arg_type(iter) != DBUS_TYPE_INVALID) {
+		DBusMessageIter sub;
+		const char *key;
+
+		assert(dbus_message_iter_get_arg_type(iter) ==
+			DBUS_TYPE_VARIANT);
+		dbus_message_iter_recurse(iter, &sub);
+
+		xpc_array_append_value(arr, deserialise_object(&sub));
+
+		dbus_message_iter_next(iter);
+	}
+
+	return arr;
+}
+
+static xpc_object_t
+deserialise_dict(DBusMessageIter *iter)
+{
+	xpc_object_t dict = xpc_dictionary_create(NULL, NULL, 0);
+
+	while (dbus_message_iter_get_arg_type(iter) != DBUS_TYPE_INVALID) {
+		DBusMessageIter sub, sub2;
+		const char *key;
+
+		dbus_message_iter_recurse(iter, &sub);
+		assert(dbus_message_iter_get_arg_type(&sub) ==
+			DBUS_TYPE_STRING);
+		dbus_message_iter_get_basic(&sub, &key);
+		assert(key);
+
+		dbus_message_iter_next(&sub);
+		assert(dbus_message_iter_get_arg_type(&sub) ==
+			DBUS_TYPE_VARIANT);
+		dbus_message_iter_recurse(&sub, &sub2);
+
+		xpc_dictionary_set_value(dict, key, deserialise_object(&sub2));
+
+		dbus_message_iter_next(iter);
+	}
+
+	return dict;
+}
+
+static xpc_object_t
+deserialise_object(DBusMessageIter *iter)
+{
+	char type = dbus_message_iter_get_arg_type(iter);
+	switch (type) {
+	case DBUS_TYPE_BOOLEAN: {
+		dbus_bool_t val;
+		dbus_message_iter_get_basic(iter, &val);
+		return xpc_bool_create(val);
+	}
+	case DBUS_TYPE_INT64: {
+		int64_t val;
+		dbus_message_iter_get_basic(iter, &val);
+		return xpc_int64_create(val);
+	}
+	case DBUS_TYPE_UINT64: {
+		uint64_t val;
+		dbus_message_iter_get_basic(iter, &val);
+		return xpc_uint64_create(val);
+	}
+	case DBUS_TYPE_STRING: {
+		const char *val;
+		dbus_message_iter_get_basic(iter, &val);
+		return xpc_string_create(val);
+	}
+	case DBUS_TYPE_ARRAY: {
+		char arrtype = dbus_message_iter_get_element_type(iter);
+
+		switch (arrtype) {
+		case DBUS_TYPE_DICT_ENTRY: {
+			DBusMessageIter sub;
+			dbus_message_iter_recurse(iter, &sub);
+			return deserialise_dict(&sub);
+		}
+		case DBUS_TYPE_VARIANT: {
+			DBusMessageIter sub;
+			dbus_message_iter_recurse(iter, &sub);
+			return deserialise_arr(&sub);
+		}
+		case DBUS_TYPE_BYTE: {
+			int len;
+			unsigned char *val;
+			dbus_message_iter_get_fixed_array(iter, val, &len);
+			return xpc_data_create(val, len);
+		}
+
+		default:
+			log_error("Bad array type %c\n", arrtype);
+			return NULL;
+		}
+	}
+	case DBUS_TYPE_UNIX_FD: {
+		int val;
+		dbus_message_iter_get_basic(iter, &val);
+		return xpc_fd_create(val);
+	}
+
+	default:
+		log_error("Invalid type %c\n", type);
+		return NULL;
+	}
+}
+
+/* Deserialise an xpcMessage message into a resultant XPC object. */
+static xpc_object_t
+deserialise_message(DBusMessage *msg)
+{
+	DBusMessageIter iter;
+
+	if (!dbus_message_iter_init(msg, &iter))
+		goto oom;
+
+	return deserialise_object(iter);
+
+oom:
+	return log_oom_null();
 }

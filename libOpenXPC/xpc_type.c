@@ -60,10 +60,13 @@ struct _xpc_bool_s {
 	struct xpc_object object;
 };
 
-typedef const struct _xpc_bool_s xb;
+typedef struct _xpc_bool_s xb;
 
-xb _xpc_bool_true;
-xb _xpc_bool_false;
+xb _xpc_bool_true = { .object.xo_xpc_type = XPC_TYPE_BOOL,
+	.object.xo_u = { .b = true } };
+xb _xpc_bool_false = { .object.xo_xpc_type = XPC_TYPE_BOOL,
+	.object.xo_u = { .b = false } };
+;
 
 struct _xpc_dictionary_s {
 };
@@ -245,6 +248,16 @@ xpc_data_create(const void *bytes, size_t length)
 {
 	xpc_u val;
 
+	val.ptr = (uintptr_t)malloc(length);
+	memcpy((void *)val.ptr, bytes, length);
+	return _xpc_prim_create(XPC_TYPE_DATA, val, length);
+}
+
+xpc_object_t
+xpc_data_create_nocopy(void *bytes, size_t length)
+{
+	xpc_u val;
+
 	val.ptr = (uintptr_t)bytes;
 	return _xpc_prim_create(XPC_TYPE_DATA, val, length);
 }
@@ -354,7 +367,7 @@ xpc_fd_create(int fd)
 {
 	xpc_u val;
 
-	val.fd = fd;
+	val.fd = dup(fd);
 	return _xpc_prim_create(XPC_TYPE_FD, val, 1);
 }
 

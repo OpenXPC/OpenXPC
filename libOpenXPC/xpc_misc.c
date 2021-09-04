@@ -37,8 +37,8 @@
 #include "compat_sbuf.h"
 #include "xpc_internal.h"
 
-#define atomic_fetchadd_int(p, v) __sync_fetch_and_add(p, v)
-#define atomic_add_int(p, v) (void)__sync_fetch_and_add(p, v)
+#define atomic_fetchadd_int(p, v) __atomic_add_fetch(p, v, __ATOMIC_SEQ_CST)
+#define atomic_add_int(p, v) (void)__atomic_add_fetch(p, v, __ATOMIC_SEQ_CST)
 
 static void xpc_copy_description_level(xpc_object_t obj, struct sbuf *sbuf,
 	int level);
@@ -102,7 +102,7 @@ xpc_release(xpc_object_t obj)
 	struct xpc_object *xo;
 
 	xo = obj;
-	if (atomic_fetchadd_int(&xo->xo_refcnt, -1) > 1)
+	if (atomic_fetchadd_int(&xo->xo_refcnt, -1) > 0)
 		return;
 
 	xpc_object_destroy(xo);

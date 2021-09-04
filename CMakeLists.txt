@@ -36,16 +36,16 @@ elseif (UNIX)
 	set(GC_ENV "OBJC_RUNTIME_LIB=ng RUNTIME_VERSION=gnustep-2.0")
 
 	execute_process(COMMAND env ${GC_ENV} ${GNUSTEP_CONFIG} --base-libs
-		OUTPUT_VARIABLE OBJC_LIBS OUTPUT_STRIP_TRAILING_WHITESPACE)
+		OUTPUT_VARIABLE GS_OBJC_LIBS OUTPUT_STRIP_TRAILING_WHITESPACE)
 	execute_process(COMMAND env ${GC_ENV} ${GNUSTEP_CONFIG} --objc-flags
-		OUTPUT_VARIABLE OBJC_FLAGS OUTPUT_STRIP_TRAILING_WHITESPACE)
-	foreach(VAR IN ITEMS OBJC_LIBS OBJC_FLAGS)
-		string(REPLACE "-MMD -MP " "" ${VAR} ${${VAR}})
+		OUTPUT_VARIABLE GS_OBJC_FLAGS OUTPUT_STRIP_TRAILING_WHITESPACE)
+	foreach(VAR IN ITEMS GS_OBJC_LIBS GS_OBJC_FLAGS)
+		string(REPLACE  "-MMD -MP " "" ${VAR} ${${VAR}})
 		string(REPLACE "-g -O2" "" ${VAR} ${${VAR}})
 	endforeach ()
-	set(CMAKE_OBJC_FLAGS "${CMAKE_OBJC_FLAGS} -fobjc-runtime=gnustep-2.0")
-	set(CMAKE_OBJCXX_FLAGS "${CMAKE_OBJC_FLAGS} -fobjc-runtime=gnustep-2.0")
-	set(OBJC_LIBS "${OBJC_LIBS} -lobjc -fobjc-runtime=gnustep-2.0")
+	set(CMAKE_OBJC_FLAGS "${CMAKE_OBJC_FLAGS} ${GS_OBJC_FLAGS} -fobjc-runtime=gnustep-2.0")
+	set(CMAKE_OBJCXX_FLAGS "${CMAKE_OBJCXX_FLAGS} ${GS_OBJC_FLAGS} -fobjc-runtime=gnustep-2.0")
+	set(OBJC_LIBS "${GS_OBJC_LIBS} -lobjc -fobjc-runtime=gnustep-2.0")
 	mark_as_advanced(GNUSTEP_CONFIG)
 endif ()
 

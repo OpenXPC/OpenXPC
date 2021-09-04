@@ -131,5 +131,7 @@ __private_extern__ struct xpc_object *_xpc_prim_create_flags(xpc_type_t type,
 	xpc_u value, size_t size, uint16_t flags);
 __private_extern__ const char *_xpc_get_type_name(xpc_object_t obj);
 __private_extern__ void xpc_object_destroy(struct xpc_object *xo);
+__private_extern__ xpc_object_t xpc_data_create_nocopy(void *bytes,
+	size_t length);
 
 #endif /* _LIBXPC_XPC_INTERNAL_H */
